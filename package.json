@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/sync-extractor-docs.mjs && next dev",
+    "build": "node scripts/sync-extractor-docs.mjs && next build",
+    "sync-docs": "node scripts/sync-extractor-docs.mjs",
     "start": "next start",
     "lint": "eslint"
   },
