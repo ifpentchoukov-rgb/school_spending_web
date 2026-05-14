@@ -2,6 +2,8 @@
 
 Public + researcher portal for the [school-spending tracker](https://github.com/ifpentchoukov-rgb/school_spending). Browses per-LEA budget and actual expenditure data sourced directly from state DOEs and Census F-33 reporting.
 
+**Live at https://school-spending-web.vercel.app**
+
 Built with Next.js 16 (App Router), Supabase (Postgres + Auth + Storage), and Tailwind. Deployed on Vercel. Auto-updates via Supabase database webhooks when scheduled extractors land new data.
 
 ---
