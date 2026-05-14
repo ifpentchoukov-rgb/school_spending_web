@@ -40,5 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# build-time generated (synced from sister Python repo)
-/lib/extractor-docs.json
+# build-time generated (synced from sister Python repo when present)
+# Committed so Vercel builds — which don't have the sister repo — still
+# render /methodology and /admin/extractors pages with full docs. Local
+# builds regenerate this file in place from the sister repo.

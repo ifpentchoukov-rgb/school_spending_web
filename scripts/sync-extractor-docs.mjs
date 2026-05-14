@@ -76,10 +76,21 @@ async function main() {
   try {
     entries = await fs.readdir(EXTRACTORS_DIR);
   } catch (err) {
+    // If the target file already exists (it's committed for production
+    // builds), keep it. Otherwise emit empty JSON so the build still succeeds.
+    const fileExists = await fs
+      .access(OUT_PATH)
+      .then(() => true)
+      .catch(() => false);
+    if (fileExists) {
+      console.warn(
+        `[sync-extractor-docs] Extractors dir not found at ${EXTRACTORS_DIR}; keeping existing ${path.relative(process.cwd(), OUT_PATH)}.`,
+      );
+      return;
+    }
     console.warn(
       `[sync-extractor-docs] Skipping — extractors dir not found at ${EXTRACTORS_DIR}: ${err.message}`,
     );
-    // Write an empty JSON so the build still succeeds.
     await fs.writeFile(OUT_PATH, "{}\n");
     return;
   }
