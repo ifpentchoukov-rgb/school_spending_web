@@ -44,3 +44,4 @@ next-env.d.ts
 # Committed so Vercel builds — which don't have the sister repo — still
 # render /methodology and /admin/extractors pages with full docs. Local
 # builds regenerate this file in place from the sister repo.
+.claude/

@@ -317,14 +317,29 @@ export default async function RankingsPage({
           >
             Apply
           </button>
-          {state !== "ALL" || band.id !== "all" || metric.id !== "topline_per_pupil" || order !== "desc" ? (
-            <Link
-              href="/rankings"
-              className="text-xs text-sky-600 dark:text-sky-400 hover:underline"
+          <div className="flex items-center gap-3">
+            {state !== "ALL" || band.id !== "all" || metric.id !== "topline_per_pupil" || order !== "desc" ? (
+              <Link
+                href="/rankings"
+                className="text-xs text-sky-600 dark:text-sky-400 hover:underline"
+              >
+                Reset filters
+              </Link>
+            ) : null}
+            <a
+              href={`/api/exports/rankings/csv?${new URLSearchParams({
+                metric: metric.id,
+                state,
+                band: band.id,
+                fy: String(resolvedFy),
+                order,
+              }).toString()}`}
+              className="text-xs rounded border border-slate-200 dark:border-slate-700 px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-900"
+              download
             >
-              Reset filters
-            </Link>
-          ) : null}
+              Download CSV
+            </a>
+          </div>
         </div>
       </form>
 

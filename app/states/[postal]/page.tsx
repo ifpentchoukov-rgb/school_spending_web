@@ -227,6 +227,15 @@ export default async function StatePage({
           {data.districts.length} operating LEAs in our master ·{" "}
           {data.eventCount} budget events tracked
         </p>
+        <div className="mt-3 flex items-center gap-2">
+          <a
+            href={`/api/exports/state/${postal}/csv`}
+            className="text-xs rounded border border-slate-200 dark:border-slate-700 px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-900"
+            download
+          >
+            Download CSV (latest FY actuals)
+          </a>
+        </div>
       </header>
 
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
