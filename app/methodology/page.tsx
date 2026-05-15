@@ -143,12 +143,20 @@ export default function MethodologyPage() {
                   {items.map((doc) => (
                     <ExtractorCard key={doc.key} doc={doc} stateName={getStateName(state)} />
                   ))}
-                  <Link
-                    href={`/states/${state}`}
-                    className="inline-block text-xs text-sky-600 hover:underline dark:text-sky-400"
-                  >
-                    See {getStateName(state)} data →
-                  </Link>
+                  <div className="flex flex-wrap gap-3 text-xs">
+                    <Link
+                      href={`/methodology/${state}`}
+                      className="text-sky-600 hover:underline dark:text-sky-400"
+                    >
+                      Full {getStateName(state)} methodology →
+                    </Link>
+                    <Link
+                      href={`/states/${state}`}
+                      className="text-sky-600 hover:underline dark:text-sky-400"
+                    >
+                      See {getStateName(state)} data →
+                    </Link>
+                  </div>
                 </div>
               </details>
             ))}

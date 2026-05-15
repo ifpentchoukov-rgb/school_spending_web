@@ -353,10 +353,10 @@ export default async function LeaPage({
               Category breakdown
             </h2>
             <Link
-              href="/methodology"
+              href={`/methodology/${postal}`}
               className="text-xs text-sky-600 hover:underline dark:text-sky-400"
             >
-              What does this mean? →
+              {postal} methodology →
             </Link>
           </div>
           <CategoryBreakdown
