@@ -7,11 +7,72 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      budget_event_components: {
+        Row: {
+          amount: number
+          budget_event_id: string
+          category: Database["public"]["Enums"]["expenditure_category"]
+          created_at: string
+          definition: string | null
+          id: string
+          line_or_cell_reference: string | null
+        }
+        Insert: {
+          amount: number
+          budget_event_id: string
+          category: Database["public"]["Enums"]["expenditure_category"]
+          created_at?: string
+          definition?: string | null
+          id?: string
+          line_or_cell_reference?: string | null
+        }
+        Update: {
+          amount?: number
+          budget_event_id?: string
+          category?: Database["public"]["Enums"]["expenditure_category"]
+          created_at?: string
+          definition?: string | null
+          id?: string
+          line_or_cell_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_event_components_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
+            referencedRelation: "budget_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_event_components_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
+            referencedRelation: "budget_events_current"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_event_components_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
+            referencedRelation: "unverified_events_high_priority"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "budget_event_components_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
+            referencedRelation: "verifications_pending_review"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
       budget_events: {
         Row: {
           created_at: string
@@ -378,6 +439,27 @@ export type Database = {
         }
         Relationships: []
       }
+      state_extractor_metadata: {
+        Row: {
+          coverage_tier: string
+          state_postal: string
+          tier_rationale: string | null
+          updated_at: string
+        }
+        Insert: {
+          coverage_tier: string
+          state_postal: string
+          tier_rationale?: string | null
+          updated_at?: string
+        }
+        Update: {
+          coverage_tier?: string
+          state_postal?: string
+          tier_rationale?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       verification_log: {
         Row: {
           action: string
@@ -417,6 +499,27 @@ export type Database = {
             referencedRelation: "budget_events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "verification_log_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
+            referencedRelation: "budget_events_current"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_log_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
+            referencedRelation: "unverified_events_high_priority"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "verification_log_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
+            referencedRelation: "verifications_pending_review"
+            referencedColumns: ["event_id"]
+          },
         ]
       }
     }
@@ -437,7 +540,9 @@ export type Database = {
           topline_definition: string | null
           updated_at: string | null
           verification_notes: string | null
-          verification_status: Database["public"]["Enums"]["verification_status"] | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
           verified_at: string | null
           verified_by: string | null
           yoy_change_dollars: number | null
@@ -458,7 +563,9 @@ export type Database = {
           topline_definition?: string | null
           updated_at?: string | null
           verification_notes?: string | null
-          verification_status?: Database["public"]["Enums"]["verification_status"] | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
           verified_at?: string | null
           verified_by?: string | null
           yoy_change_dollars?: number | null
@@ -479,13 +586,37 @@ export type Database = {
           topline_definition?: string | null
           updated_at?: string | null
           verification_notes?: string | null
-          verification_status?: Database["public"]["Enums"]["verification_status"] | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
           verified_at?: string | null
           verified_by?: string | null
           yoy_change_dollars?: number | null
           yoy_change_pct?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "budget_events_extraction_run_id_fkey"
+            columns: ["extraction_run_id"]
+            isOneToOne: false
+            referencedRelation: "extraction_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_events_leaid_fkey"
+            columns: ["leaid"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["leaid"]
+          },
+          {
+            foreignKeyName: "budget_events_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "source_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       unverified_events_high_priority: {
         Row: {
@@ -503,7 +634,9 @@ export type Database = {
           status: Database["public"]["Enums"]["budget_status"] | null
           storage_path: string | null
           topline_amount: number | null
-          verification_status: Database["public"]["Enums"]["verification_status"] | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
           yoy_change_pct: number | null
         }
         Relationships: []
@@ -551,12 +684,15 @@ export type Database = {
           status: Database["public"]["Enums"]["budget_status"] | null
           storage_path: string | null
           topline_amount: number | null
-          verification_status: Database["public"]["Enums"]["verification_status"] | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
         }
         Relationships: []
       }
     }
     Functions: {
+      custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       is_verifier: { Args: never; Returns: boolean }
     }
     Enums: {
@@ -566,6 +702,21 @@ export type Database = {
         | "adopted"
         | "disapproved"
         | "actual"
+      expenditure_category:
+        | "instruction"
+        | "support_services_student"
+        | "support_services_instruction"
+        | "administration"
+        | "operations_maintenance"
+        | "transportation"
+        | "food_service"
+        | "employee_benefits"
+        | "capital_outlay"
+        | "debt_service"
+        | "revenue_federal"
+        | "revenue_state"
+        | "revenue_local"
+        | "other"
       extraction_run_status: "success" | "partial" | "failed"
       extraction_trigger: "cron" | "manual" | "backfill"
       verification_status: "unverified" | "verified" | "flagged" | "disputed"
@@ -575,3 +726,153 @@ export type Database = {
     }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      budget_status: [
+        "proposed",
+        "tentative",
+        "adopted",
+        "disapproved",
+        "actual",
+      ],
+      expenditure_category: [
+        "instruction",
+        "support_services_student",
+        "support_services_instruction",
+        "administration",
+        "operations_maintenance",
+        "transportation",
+        "food_service",
+        "employee_benefits",
+        "capital_outlay",
+        "debt_service",
+        "revenue_federal",
+        "revenue_state",
+        "revenue_local",
+        "other",
+      ],
+      extraction_run_status: ["success", "partial", "failed"],
+      extraction_trigger: ["cron", "manual", "backfill"],
+      verification_status: ["unverified", "verified", "flagged", "disputed"],
+    },
+  },
+} as const
