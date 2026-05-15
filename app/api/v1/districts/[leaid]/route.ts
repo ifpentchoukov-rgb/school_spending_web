@@ -4,6 +4,7 @@ import {
   jsonError,
   jsonResponse,
 } from "@/lib/api/response";
+import { enforceRateLimit } from "@/lib/api/rate-limit";
 import { detectTier, tierHeaders } from "@/lib/api/tier";
 
 export const revalidate = 300;
@@ -22,7 +23,9 @@ export async function GET(
   if (!/^[0-9A-Z]{1,12}$/i.test(leaid)) {
     return jsonError("invalid_leaid", `Invalid leaid: ${leaid}`);
   }
-  const tier = await detectTier(request);
+  const ctx = await detectTier(request);
+  const limited = await enforceRateLimit(ctx);
+  if (limited) return limited;
 
   const supabase = await getServerClient();
 
@@ -103,6 +106,6 @@ export async function GET(
         coverage_caveats: UNIVERSAL_CAVEATS,
       },
     },
-    { headers: tierHeaders(tier) },
+    { headers: tierHeaders(ctx.tier) },
   );
 }

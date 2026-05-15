@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -12,6 +13,32 @@ import type { Database } from "@/lib/types";
  *   const supabase = await getServerClient();
  *   const { data } = await supabase.from("districts").select("*").limit(10);
  */
+/**
+ * Service-role Supabase client. Bypasses RLS. Use only inside route
+ * handlers / server actions where we genuinely need cross-user visibility
+ * (e.g. authenticating an inbound API key lookup before the user's
+ * tier is even known).
+ *
+ * Throws if SUPABASE_SERVICE_ROLE_KEY is not set so misconfigured
+ * deploys fail loudly rather than silently degrading to anon access.
+ */
+export function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error(
+      "getServiceRoleClient: NEXT_PUBLIC_SUPABASE_URL or " +
+        "SUPABASE_SERVICE_ROLE_KEY missing.",
+    );
+  }
+  return createClient<Database>(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
 export async function getServerClient() {
   const cookieStore = await cookies();
 

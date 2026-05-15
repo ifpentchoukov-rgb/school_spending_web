@@ -83,26 +83,43 @@ export async function GET(request: Request) {
       },
     ],
     auth: {
-      type: "bearer-jwt",
-      header: "Authorization: Bearer <supabase_jwt>",
+      types: [
+        {
+          name: "opaque-api-key",
+          header: "Authorization: Bearer ssk_<...>",
+          notes:
+            "Long-lived bearer tokens issued by an admin via /admin/api-keys. Tier is inherited from the issuee's researcher_allowlist / role at request time, so revoking the allowlist entry transparently downgrades the key.",
+        },
+        {
+          name: "supabase-session-jwt",
+          header: "Authorization: Bearer <supabase_jwt>",
+          notes:
+            "Short-lived (~1 hour) tokens minted by Supabase magic-link auth. Useful from the browser; less useful for unattended scripts where opaque keys are preferred.",
+        },
+      ],
       tiers: {
         anonymous: {
-          rpm_target: 60,
+          rpm: 60,
           max_page_size: 500,
           access:
-            "All read endpoints. Rate limiting is documentation-only in v1 (Vercel KV-backed enforcement on the roadmap).",
+            "All read endpoints. Hard-enforced via Vercel KV with fixed 60-second windows; 429 responses carry Retry-After.",
         },
         researcher: {
-          rpm_target: 600,
+          rpm: 600,
           max_page_size: 5000,
           access:
-            "Same surface as anonymous, plus elevated page-size caps and higher rate budgets. Granted by email allowlist — request via the contact form on /methodology.",
+            "Same surface as anonymous, plus elevated page-size caps and a 10x rate budget. Granted by adding an email to researcher_allowlist (admin action).",
         },
         admin: {
-          rpm_target: 0,
+          rpm: 0,
           max_page_size: 5000,
-          access: "Unlimited.",
+          access: "Unlimited (rpm: 0 = no enforcement).",
         },
+      },
+      rate_limit_response: {
+        status: 429,
+        body: '{"error": {"code": "rate_limited", "message": "..."}}',
+        headers: ["Retry-After", "X-RateLimit-Tier", "X-RateLimit-RPM-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
       },
     },
     response_envelope: {

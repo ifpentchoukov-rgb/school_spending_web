@@ -6,14 +6,17 @@ import {
   offsetRange,
   parsePagination,
 } from "@/lib/api/response";
+import { enforceRateLimit } from "@/lib/api/rate-limit";
 import { detectTier, tierHeaders } from "@/lib/api/tier";
 
 export const revalidate = 300;
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const tier = await detectTier(request);
-  const { page, page_size } = parsePagination(url, tier);
+  const ctx = await detectTier(request);
+  const limited = await enforceRateLimit(ctx);
+  if (limited) return limited;
+  const { page, page_size } = parsePagination(url, ctx.tier);
   const [from, to] = offsetRange(page, page_size);
 
   const state = (url.searchParams.get("state") ?? "").toUpperCase();
@@ -55,6 +58,6 @@ export async function GET(request: Request) {
         coverage_caveats: UNIVERSAL_CAVEATS,
       },
     },
-    { headers: tierHeaders(tier) },
+    { headers: tierHeaders(ctx.tier) },
   );
 }

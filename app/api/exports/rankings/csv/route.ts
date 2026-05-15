@@ -1,5 +1,7 @@
 import { getServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types";
+import { enforceRateLimit } from "@/lib/api/rate-limit";
+import { detectTier } from "@/lib/api/tier";
 
 export const revalidate = 3600;
 
@@ -45,6 +47,9 @@ function csvCell(v: unknown): string {
 }
 
 export async function GET(request: Request) {
+  const ctx = await detectTier(request);
+  const limited = await enforceRateLimit(ctx);
+  if (limited) return limited;
   const url = new URL(request.url);
   const metric = url.searchParams.get("metric") ?? "topline_per_pupil";
   if (!ALLOWED_METRICS.has(metric)) {

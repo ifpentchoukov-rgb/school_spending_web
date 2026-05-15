@@ -2,6 +2,8 @@ import { getServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types";
 import { rowsToCsv } from "@/lib/api/csv";
 import { jsonError } from "@/lib/api/response";
+import { enforceRateLimit } from "@/lib/api/rate-limit";
+import { detectTier } from "@/lib/api/tier";
 
 export const revalidate = 86400;
 
@@ -19,7 +21,10 @@ const COLUMNS: (keyof District)[] = [
   "is_operating_district",
 ];
 
-export async function GET() {
+export async function GET(request: Request) {
+  const ctx = await detectTier(request);
+  const limited = await enforceRateLimit(ctx);
+  if (limited) return limited;
   const supabase = await getServerClient();
 
   // Paginate through the table — Supabase caps SELECT at ~1000 by default.

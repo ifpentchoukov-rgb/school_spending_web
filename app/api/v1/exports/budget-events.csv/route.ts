@@ -2,6 +2,8 @@ import { getServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types";
 import { rowsToCsv } from "@/lib/api/csv";
 import { jsonError } from "@/lib/api/response";
+import { enforceRateLimit } from "@/lib/api/rate-limit";
+import { detectTier } from "@/lib/api/tier";
 
 export const revalidate = 3600;
 
@@ -28,6 +30,9 @@ const COLUMNS: (keyof Event)[] = [
 const HARD_CAP = 50_000;
 
 export async function GET(request: Request) {
+  const ctx = await detectTier(request);
+  const limited = await enforceRateLimit(ctx);
+  if (limited) return limited;
   const url = new URL(request.url);
   const fy = Number(url.searchParams.get("fiscal_year"));
   if (!fy || Number.isNaN(fy)) {

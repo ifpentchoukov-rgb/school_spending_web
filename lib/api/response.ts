@@ -67,6 +67,7 @@ export function jsonError(
   code: string,
   message: string,
   status = 400,
+  extraHeaders: Record<string, string> = {},
 ): Response {
   return new Response(
     JSON.stringify({ error: { code, message } }, null, 2),
@@ -75,6 +76,7 @@ export function jsonError(
       headers: {
         "Content-Type": "application/json; charset=utf-8",
         "Cache-Control": "no-store",
+        ...extraHeaders,
       },
     },
   );

@@ -3,10 +3,15 @@ import {
   parseLeaIds,
   toCsv,
 } from "@/lib/compare-data";
+import { enforceRateLimit } from "@/lib/api/rate-limit";
+import { detectTier } from "@/lib/api/tier";
 
 export const revalidate = 3600;
 
 export async function GET(request: Request) {
+  const ctx = await detectTier(request);
+  const limited = await enforceRateLimit(ctx);
+  if (limited) return limited;
   const url = new URL(request.url);
   const leaids = parseLeaIds(url.searchParams.get("leaids") ?? undefined);
   if (leaids.length === 0) {

@@ -1,5 +1,7 @@
 import { getServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types";
+import { enforceRateLimit } from "@/lib/api/rate-limit";
+import { detectTier } from "@/lib/api/tier";
 
 export const revalidate = 3600;
 
@@ -59,6 +61,9 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ postal: string }> },
 ) {
+  const ctx = await detectTier(request);
+  const limited = await enforceRateLimit(ctx);
+  if (limited) return limited;
   const { postal } = await params;
   const state = postal.toUpperCase();
   if (!/^[A-Z]{2}$/.test(state)) {
