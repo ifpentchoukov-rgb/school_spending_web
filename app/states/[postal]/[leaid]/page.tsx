@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CategoryBreakdown } from "@/components/category-breakdown";
 import { ToplineCard } from "@/components/topline-card";
 import { getStateMeta } from "@/lib/state-meta";
 import { getServerClient } from "@/lib/supabase/server";
@@ -12,23 +13,31 @@ export const revalidate = 86400;
 type District = Database["public"]["Tables"]["districts"]["Row"];
 type Event = Database["public"]["Tables"]["budget_events"]["Row"];
 type SourceDoc = Database["public"]["Tables"]["source_documents"]["Row"];
+type Component = Database["public"]["Tables"]["budget_event_components"]["Row"];
+type StateMeta = Database["public"]["Tables"]["state_extractor_metadata"]["Row"];
 
 async function loadLea(postal: string, leaid: string) {
   const supabase = await getServerClient();
 
-  const [{ data: district }, { data: events }] = await Promise.all([
-    supabase
-      .from("districts")
-      .select("*")
-      .eq("leaid", leaid)
-      .eq("state_postal", postal)
-      .maybeSingle(),
-    supabase
-      .from("budget_events")
-      .select("*")
-      .eq("leaid", leaid)
-      .order("fiscal_year", { ascending: true }),
-  ]);
+  const [{ data: district }, { data: events }, { data: tierRow }] =
+    await Promise.all([
+      supabase
+        .from("districts")
+        .select("*")
+        .eq("leaid", leaid)
+        .eq("state_postal", postal)
+        .maybeSingle(),
+      supabase
+        .from("budget_events")
+        .select("*")
+        .eq("leaid", leaid)
+        .order("fiscal_year", { ascending: true }),
+      supabase
+        .from("state_extractor_metadata")
+        .select("*")
+        .eq("state_postal", postal)
+        .maybeSingle(),
+    ]);
 
   if (!district) return null;
 
@@ -44,6 +53,19 @@ async function loadLea(postal: string, leaid: string) {
     sources = data ?? [];
   }
   const sourceById = new Map(sources.map((s) => [s.id, s]));
+
+  // Components for this LEA's non-superseded events (Phase 9.4).
+  const eventIds = (events ?? [])
+    .filter((e) => !e.is_superseded)
+    .map((e) => e.id);
+  let components: Component[] = [];
+  if (eventIds.length > 0) {
+    const { data } = await supabase
+      .from("budget_event_components")
+      .select("*")
+      .in("budget_event_id", eventIds);
+    components = data ?? [];
+  }
 
   // Peer LEAs — 5 closest by enrollment in same state.
   const peerEnrollment = district.enrollment_fy25 ?? 0;
@@ -93,6 +115,8 @@ async function loadLea(postal: string, leaid: string) {
     events: events ?? [],
     sourceById,
     peers,
+    components,
+    tier: tierRow ?? null,
   };
 }
 
@@ -109,7 +133,7 @@ export default async function LeaPage({
   const data = await loadLea(postal, leaid);
   if (!data) notFound();
 
-  const { district, events, sourceById, peers } = data;
+  const { district, events, sourceById, peers, components, tier } = data;
   const currentEvents = events.filter((e) => !e.is_superseded);
   const latestActual = pickLatestByStatus(currentEvents, "actual");
   const latestAdopted = pickLatestByStatus(currentEvents, "adopted");
@@ -123,9 +147,12 @@ export default async function LeaPage({
         >
           ← {meta.name}
         </Link>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-          {district.lea_name}
-        </h1>
+        <div className="mt-2 flex items-baseline gap-3 flex-wrap">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+            {district.lea_name}
+          </h1>
+          {tier ? <CoverageTierBadge tier={tier} /> : null}
+        </div>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
           <span className="font-mono">{district.leaid}</span>
           {district.state_leaid ? (
@@ -319,6 +346,33 @@ export default async function LeaPage({
         </div>
       </section>
 
+      {components.length > 0 ? (
+        <section className="mb-10">
+          <div className="flex items-baseline justify-between flex-wrap gap-2 mb-3">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Category breakdown
+            </h2>
+            <Link
+              href="/methodology"
+              className="text-xs text-sky-600 hover:underline dark:text-sky-400"
+            >
+              What does this mean? →
+            </Link>
+          </div>
+          <CategoryBreakdown
+            events={currentEvents}
+            components={components}
+            enrollment={district.enrollment_fy25}
+          />
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+            Categories are standardized across states from each source&apos;s
+            chart of accounts. A dash (—) means the source doesn&apos;t
+            separate that category — see the topline definition below for
+            what is included.
+          </p>
+        </section>
+      ) : null}
+
       {latestActual?.topline_definition || latestAdopted?.topline_definition ? (
         <section className="rounded-lg border border-slate-200 dark:border-slate-800 p-5 mb-10">
           <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
@@ -359,6 +413,35 @@ function pickLatestByStatus(events: Event[], status: string): Event | null {
   if (filtered.length === 0) return null;
   return filtered.reduce((max, e) =>
     e.fiscal_year > max.fiscal_year ? e : max,
+  );
+}
+
+function CoverageTierBadge({ tier }: { tier: StateMeta }) {
+  // rich = 7+ canonical categories extractable; moderate = 2-5; thin = 1
+  // (topline only); deferred = no extractor yet. Phase 7.3 classification.
+  const t = tier.coverage_tier;
+  const styles: Record<string, string> = {
+    rich: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+    moderate: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300",
+    thin: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+    deferred:
+      "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  };
+  const label: Record<string, string> = {
+    rich: "Rich detail",
+    moderate: "Moderate detail",
+    thin: "Topline only",
+    deferred: "Source deferred",
+  };
+  return (
+    <span
+      title={tier.tier_rationale ?? undefined}
+      className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${
+        styles[t] ?? styles.deferred
+      }`}
+    >
+      {label[t] ?? t}
+    </span>
   );
 }
 
