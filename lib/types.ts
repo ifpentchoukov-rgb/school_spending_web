@@ -68,6 +68,20 @@ export type Database = {
             foreignKeyName: "budget_event_components_budget_event_id_fkey"
             columns: ["budget_event_id"]
             isOneToOne: false
+            referencedRelation: "v_district_full_spend"
+            referencedColumns: ["budget_event_id"]
+          },
+          {
+            foreignKeyName: "budget_event_components_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
+            referencedRelation: "v_per_pupil_metrics"
+            referencedColumns: ["budget_event_id"]
+          },
+          {
+            foreignKeyName: "budget_event_components_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
             referencedRelation: "verifications_pending_review"
             referencedColumns: ["event_id"]
           },
@@ -161,12 +175,58 @@ export type Database = {
           },
         ]
       }
+      cooperative_membership: {
+        Row: {
+          allocation_basis: string | null
+          allocation_share: number | null
+          cooperative_leaid: string
+          created_at: string
+          fiscal_year: number
+          member_leaid: string
+          updated_at: string
+        }
+        Insert: {
+          allocation_basis?: string | null
+          allocation_share?: number | null
+          cooperative_leaid: string
+          created_at?: string
+          fiscal_year: number
+          member_leaid: string
+          updated_at?: string
+        }
+        Update: {
+          allocation_basis?: string | null
+          allocation_share?: number | null
+          cooperative_leaid?: string
+          created_at?: string
+          fiscal_year?: number
+          member_leaid?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cooperative_membership_cooperative_leaid_fkey"
+            columns: ["cooperative_leaid"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["leaid"]
+          },
+          {
+            foreignKeyName: "cooperative_membership_member_leaid_fkey"
+            columns: ["member_leaid"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["leaid"]
+          },
+        ]
+      }
       districts: {
         Row: {
           county_name: string | null
           created_at: string
           data_tier: number | null
           enrollment_fy25: number | null
+          entity_type: string
           exp_total_fy23: number | null
           fy_calendar: string | null
           is_operating_district: boolean
@@ -181,6 +241,7 @@ export type Database = {
           created_at?: string
           data_tier?: number | null
           enrollment_fy25?: number | null
+          entity_type?: string
           exp_total_fy23?: number | null
           fy_calendar?: string | null
           is_operating_district?: boolean
@@ -195,6 +256,7 @@ export type Database = {
           created_at?: string
           data_tier?: number | null
           enrollment_fy25?: number | null
+          entity_type?: string
           exp_total_fy23?: number | null
           fy_calendar?: string | null
           is_operating_district?: boolean
@@ -517,6 +579,20 @@ export type Database = {
             foreignKeyName: "verification_log_budget_event_id_fkey"
             columns: ["budget_event_id"]
             isOneToOne: false
+            referencedRelation: "v_district_full_spend"
+            referencedColumns: ["budget_event_id"]
+          },
+          {
+            foreignKeyName: "verification_log_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
+            referencedRelation: "v_per_pupil_metrics"
+            referencedColumns: ["budget_event_id"]
+          },
+          {
+            foreignKeyName: "verification_log_budget_event_id_fkey"
+            columns: ["budget_event_id"]
+            isOneToOne: false
             referencedRelation: "verifications_pending_review"
             referencedColumns: ["event_id"]
           },
@@ -652,6 +728,92 @@ export type Database = {
           n_live_states: number | null
         }
         Relationships: []
+      }
+      v_district_full_spend: {
+        Row: {
+          allocated_cooperative_spend: number | null
+          budget_event_id: string | null
+          cooperative_count: number | null
+          enrollment_fy25: number | null
+          entity_type: string | null
+          fiscal_year: number | null
+          full_spend_per_pupil: number | null
+          lea_name: string | null
+          leaid: string | null
+          own_spend: number | null
+          state_postal: string | null
+          status: Database["public"]["Enums"]["budget_status"] | null
+          total_full_spend: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_events_leaid_fkey"
+            columns: ["leaid"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["leaid"]
+          },
+        ]
+      }
+      v_per_pupil_metrics: {
+        Row: {
+          administration_amount: number | null
+          administration_per_pupil: number | null
+          budget_event_id: string | null
+          capital_outlay_amount: number | null
+          capital_outlay_per_pupil: number | null
+          county_name: string | null
+          debt_service_amount: number | null
+          debt_service_per_pupil: number | null
+          employee_benefits_amount: number | null
+          employee_benefits_per_pupil: number | null
+          enrollment_fy25: number | null
+          fiscal_year: number | null
+          food_service_amount: number | null
+          food_service_per_pupil: number | null
+          instruction_amount: number | null
+          instruction_per_pupil: number | null
+          is_operating_district: boolean | null
+          lea_name: string | null
+          leaid: string | null
+          operations_maintenance_amount: number | null
+          operations_maintenance_per_pupil: number | null
+          other_amount: number | null
+          other_per_pupil: number | null
+          prior_year_baseline: number | null
+          revenue_federal_amount: number | null
+          revenue_federal_per_pupil: number | null
+          revenue_local_amount: number | null
+          revenue_local_per_pupil: number | null
+          revenue_state_amount: number | null
+          revenue_state_per_pupil: number | null
+          state_leaid: string | null
+          state_postal: string | null
+          status: Database["public"]["Enums"]["budget_status"] | null
+          support_services_instruction_amount: number | null
+          support_services_instruction_per_pupil: number | null
+          support_services_student_amount: number | null
+          support_services_student_per_pupil: number | null
+          topline_amount: number | null
+          topline_definition: string | null
+          topline_per_pupil: number | null
+          transportation_amount: number | null
+          transportation_per_pupil: number | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          yoy_change_dollars: number | null
+          yoy_change_pct: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_events_leaid_fkey"
+            columns: ["leaid"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["leaid"]
+          },
+        ]
       }
       v_state_fy_coverage: {
         Row: {
