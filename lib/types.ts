@@ -755,6 +755,33 @@ export type Database = {
           },
         ]
       }
+      v_fy27_rollup: {
+        Row: {
+          change_bucket: string | null
+          county_name: string | null
+          dollar_change: number | null
+          enrollment_fy25: number | null
+          entity_type: string | null
+          fy26_baseline_amount: number | null
+          fy26_baseline_definition: string | null
+          fy26_baseline_status:
+            | Database["public"]["Enums"]["budget_status"]
+            | null
+          fy26_event_id: string | null
+          fy26_per_pupil: number | null
+          fy27_amount: number | null
+          fy27_definition: string | null
+          fy27_event_id: string | null
+          fy27_per_pupil: number | null
+          fy27_source_document_id: string | null
+          lea_name: string | null
+          leaid: string | null
+          pct_change: number | null
+          state_leaid: string | null
+          state_postal: string | null
+        }
+        Relationships: []
+      }
       v_per_pupil_metrics: {
         Row: {
           administration_amount: number | null

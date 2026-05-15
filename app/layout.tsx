@@ -25,6 +25,7 @@ const NAV = [
   { href: "/states", label: "States" },
   { href: "/rankings", label: "Rankings" },
   { href: "/compare", label: "Compare" },
+  { href: "/reports/fy27", label: "FY27" },
   { href: "/coverage-map", label: "Coverage Map" },
   { href: "/methodology", label: "Methodology" },
 ];
